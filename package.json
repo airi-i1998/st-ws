@@ -1,0 +1,25 @@
+{
+  "name": "st-ws",
+  "version": "1.0.0",
+  "description": "- client：実際に接続してきたブラウザやアプリ - socket(またはws)：接続が確立したあとにできる「一本の通信線」みたいなもの - WebSocketServer(WSS)：サーバー本体(クライアントの接続を受け付ける側)",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/airi-i1998/st-ws.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/airi-i1998/st-ws/issues"
+  },
+  "homepage": "https://github.com/airi-i1998/st-ws#readme",
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}
