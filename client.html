@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <meta charset="UTF-8" />
+  <title>WebSocket Client</title>
+  <style>
+    body {
+      font-family: system-ui;
+      margin: 2rem;
+    }
+    #log {
+      border: 1px solid #ccc;
+      padding: 8px;
+      height: 180px;
+      overflow: auto;
+    }
+    button {
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+  </style>
+
+  <h1>WebSocket Client</h1>
+  <p>
+    このページを<strong>2タブ</strong>で開いて、片方でボタンを押すと、もう片方にも表示されます。
+  </p>
+
+  <div style="display: flex; gap: 12px; align-items: center">
+    <button id="sendBtn">ボタンクリック✅</button>
+    <span id="status">🔴 disconnected</span>
+  </div>
+
+  <h3>受信ログ</h3>
+  <div id="log"></div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const log = (msg) => {
+      // <div id="log"></div>みたいなHTML要素を取得している
+      const el = $("log");
+      // innerHTML：その要素の中身(HTML)を表すプロパティ
+      // +=で、今ある中身に新しい行を追加している
+      el.innerHTML += `<div>${new Date().toLocaleTimeString()} - ${msg}</div>`;
+      // 全部表示しないで、中でスクロールさせる
+      el.scrollTop = el.scrollHeight;
+    };
+    // textContent：HTMLタグ内のテキスト部分を上書きするプロパティ
+    const ws = new WebSocket("ws://localhost:3001");
+    ws.addEventListener("open", () => {
+      $("status").textContent = "🟢 connected";
+      log("接続完了");
+    });
+    ws.addEventListener("close", () => {
+      $("status").textContent = "🔴 disconnected";
+      log("切断されました");
+    });
+    ws.addEventListener("error", () => {
+      log("エラーが発生しました");
+    });
+
+    // サーバーが誰かがクリックしたよとブロードキャストした通知を受けとって表示している
+    ws.addEventListener("message", async (event) => {
+      let raw;
+      try {
+        // Blob：Binary Large Objectの略で、ブラウザでバイナリデータ（画像・動画・ファイルなど）を扱うためのオブジェクト
+        raw = event.data instanceof Blob
+          ? await event.data.text()
+          : typeof event.data === 'string'
+            ? event.data
+            : JSON.stringify(event.data);
+        // javascriptオブジェクトに変換
+        const msg = JSON.parse(raw);
+        if (msg.type === "CLICK") {
+          // payload：メッセージの本体部分
+          log(
+            `ボタンがクリックされました：by ${msg.payload.id} @ ${new Date(
+              msg.payload.at
+            ).toLocaleTimeString()}`
+          );
+        } else {
+          log(`unknown ${raw}`);
+        }
+      } catch {
+        log(`raw: ${raw}`);
+      }
+    });
+
+    $("sendBtn").addEventListener("click", () => {
+      if (ws.readyState !== WebSocket.OPEN) log("未接続です");
+      // データを送る定義
+      const payload = {
+        type: "CLICK",
+        payload: {
+          id: crypto.randomUUID().slice(0, 8),
+          at: new Date(Date.now()),
+        },
+      };
+      // JSON形式にして送信
+      ws.send(JSON.stringify(payload));
+      log("ボタンをクリックしました（送信完了）");
+    });
+  </script>
+</html>
